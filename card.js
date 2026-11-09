@@ -1,4 +1,4 @@
-/* approval-cards renderer v2.1. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
+/* approval-cards renderer v2.2. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
 (function () {
   var CSS = '.ac{font-size:14px;line-height:1.6;color:var(--text-primary)}'
     + '.ac [hidden]{display:none !important}'
@@ -28,8 +28,8 @@
     email: ['mail', 'blue', 'Email'], forward: ['arrow-forward-up', 'blue', 'ClickUp'],
     task: ['subtask', 'orange', 'ClickUp'], subtask: ['subtask', 'orange', 'ClickUp'], update: ['pencil', 'yellow', 'ClickUp'],
     comment: ['message', 'violet', 'ClickUp'], close: ['circle-check', 'aqua', 'ClickUp'], time: ['clock', 'aqua', 'ClickUp'],
-    status: ['flag', 'aqua', 'ClickUp'], site: ['world', 'green', 'Website'], ad: ['speakerphone', 'green', 'Ads'],
-    live: ['world', 'success', 'Website'], d1: ['database', 'magenta', 'Records'], invoice: ['receipt', 'yellow', 'Billing'],
+    status: ['flag', 'aqua', 'ClickUp'], site: ['world', 'green', 'Work done'], ad: ['speakerphone', 'green', 'Work done'],
+    live: ['world', 'success', 'Work done'], asset: ['photo', 'green', 'Work done'], d1: ['database', 'magenta', 'Records'], invoice: ['receipt', 'yellow', 'Billing'],
     choice: ['help-circle', 'violet', 'Decide']
   };
   var ASK = {
@@ -104,11 +104,16 @@
           el('div', { style: 'font-size:14px;color:var(--text-primary)', text: ch.text })])]));
     }
 
-    var SECICON = { Email: ['mail', 'blue'], ClickUp: ['subtask', 'orange'], Billing: ['receipt', 'yellow'], Website: ['world', 'green'], Ads: ['speakerphone', 'green'], Records: ['database', 'magenta'], Decide: ['help-circle', 'violet'] };
+    var SECICON = { 'Work done': ['tool', 'green'], Email: ['mail', 'blue'], ClickUp: ['subtask', 'orange'], Billing: ['receipt', 'yellow'], Website: ['world', 'green'], Ads: ['speakerphone', 'green'], Records: ['database', 'magenta'], Decide: ['help-circle', 'violet'] };
+    var ORDER = ['Work done', 'Email', 'ClickUp', 'Billing', 'Records', 'Decide'];
+    function secOf(r) { return r.section || (TYPE[r.type] || [0, 0, 'Other'])[2]; }
+    function rank(s) { var i = ORDER.indexOf(s); return i < 0 ? ORDER.length : i; }
+    var rows = (cfg.rows || []).map(function (r, i) { return { r: r, i: i }; })
+      .sort(function (a, b) { return rank(secOf(a.r)) - rank(secOf(b.r)) || a.i - b.i; }).map(function (x) { return x.r; });
     var lastSec = null, panel = null, cnt = null, count = 0;
-    (cfg.rows || []).forEach(function (r) {
+    rows.forEach(function (r) {
       var t = TYPE[r.type] || ['point', 'blue', 'Other'];
-      var sec = r.section || t[2], first = false;
+      var sec = secOf(r), first = false;
       if (sec !== lastSec) {
         var si = SECICON[sec] || [t[0], t[1]];
         cnt = el('span', { 'class': 'cnt' }); count = 0;
