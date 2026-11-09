@@ -1,4 +1,4 @@
-/* approval-cards renderer v2. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
+/* approval-cards renderer v2.1. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
 (function () {
   var CSS = '.ac{font-size:14px;line-height:1.6;color:var(--text-primary)}'
     + '.ac [hidden]{display:none !important}'
@@ -10,6 +10,9 @@
     + '.ac .chip{font-size:12px;padding:2px 10px;border-radius:999px;white-space:nowrap;flex:none}'
     + '.ac .row{display:grid;grid-template-columns:22px 32px minmax(0,1fr);gap:10px;padding:12px 0;border-top:0.5px solid var(--border);align-items:start}'
     + '.ac .row.first{border-top:none}'
+    + '.ac .panel{border:0.5px solid var(--border-strong);border-radius:10px;padding:2px 14px 4px;margin-top:14px}'
+    + '.ac .ph{display:flex;align-items:center;gap:8px;padding:10px 0 8px;border-bottom:0.5px solid var(--border);font-size:14px;font-weight:500}'
+    + '.ac .ph .cnt{font-size:12px;font-weight:400;color:var(--text-secondary)}'
     + '.ac .ic{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px}'
     + '.ac .tt{font-weight:500;font-size:14px}'
     + '.ac .dt{font-size:13px;color:var(--text-secondary)}'
@@ -101,11 +104,18 @@
           el('div', { style: 'font-size:14px;color:var(--text-primary)', text: ch.text })])]));
     }
 
-    var lastSec = null;
+    var SECICON = { Email: ['mail', 'blue'], ClickUp: ['subtask', 'orange'], Billing: ['receipt', 'yellow'], Website: ['world', 'green'], Ads: ['speakerphone', 'green'], Records: ['database', 'magenta'], Decide: ['help-circle', 'violet'] };
+    var lastSec = null, panel = null, cnt = null, count = 0;
     (cfg.rows || []).forEach(function (r) {
       var t = TYPE[r.type] || ['point', 'blue', 'Other'];
       var sec = r.section || t[2], first = false;
-      if (sec !== lastSec) { card.appendChild(el('div', { 'class': 'sec', text: sec })); lastSec = sec; first = true; }
+      if (sec !== lastSec) {
+        var si = SECICON[sec] || [t[0], t[1]];
+        cnt = el('span', { 'class': 'cnt' }); count = 0;
+        panel = el('div', { 'class': 'panel' }, [el('div', { 'class': 'ph' }, [icon(si[0], 'font-size:17px;color:' + tone(si[1], 'text')), el('span', { text: sec }), cnt])]);
+        card.appendChild(panel); lastSec = sec; first = true;
+      }
+      count += 1; cnt.textContent = count === 1 ? '' : count + ' items';
       var live = r.type === 'live' || r.live;
       var row = el('div', { 'class': 'row' + (first ? ' first' : '') });
       if (live) row.appendChild(el('span'));
@@ -134,7 +144,7 @@
       boxes.forEach(function (b) { body.appendChild(b); });
       if (links.childNodes.length) body.appendChild(links);
       row.appendChild(body);
-      card.appendChild(row);
+      panel.appendChild(row);
     });
 
     if (cfg.note) card.appendChild(el('div', { 'class': 'dt', style: 'margin-top:10px', text: cfg.note }));
