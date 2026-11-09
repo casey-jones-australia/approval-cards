@@ -1,4 +1,4 @@
-/* approval-cards renderer v2.2. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
+/* approval-cards renderer v2.3. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
 (function () {
   var CSS = '.ac{font-size:14px;line-height:1.6;color:var(--text-primary)}'
     + '.ac [hidden]{display:none !important}'
@@ -22,6 +22,7 @@
     + '.ac .lk{font-size:12px;color:var(--text-accent);cursor:pointer;margin-right:14px;user-select:none}'
     + '.ac .lk:hover{text-decoration:underline}'
     + '.ac a{color:var(--text-accent);text-decoration:none}.ac a:hover{text-decoration:underline}'
+    + '.ac .pill{font-size:11px;padding:1px 8px;border-radius:999px;margin-left:8px;font-weight:400;vertical-align:1px}'
     + '.ac .sug{font-size:11px;padding:1px 8px;border-radius:999px;background:var(--surface-1);color:var(--text-secondary);margin-left:8px;font-weight:400}';
 
   var TYPE = {
@@ -29,12 +30,12 @@
     task: ['subtask', 'orange', 'ClickUp'], subtask: ['subtask', 'orange', 'ClickUp'], update: ['pencil', 'yellow', 'ClickUp'],
     comment: ['message', 'violet', 'ClickUp'], close: ['circle-check', 'aqua', 'ClickUp'], time: ['clock', 'aqua', 'ClickUp'],
     status: ['flag', 'aqua', 'ClickUp'], site: ['world', 'green', 'Work done'], ad: ['speakerphone', 'green', 'Work done'],
-    live: ['world', 'success', 'Work done'], asset: ['photo', 'green', 'Work done'], d1: ['database', 'magenta', 'Records'], invoice: ['receipt', 'yellow', 'Billing'],
+    live: ['world', 'success', 'Work done'], preview: ['eye', 'yellow', 'Work done'], asset: ['photo', 'green', 'Work done'], d1: ['database', 'magenta', 'Records'], invoice: ['receipt', 'yellow', 'Billing'],
     choice: ['help-circle', 'violet', 'Decide']
   };
   var ASK = {
     done: ['circle-check', 'success', 'Done'], live: ['circle-check', 'success', 'Done, live'],
-    team: ['arrow-forward-up', 'accent', 'To the team'], reply: ['mail', 'accent', 'Answered'],
+    preview: ['eye', 'warning', 'Ready to go live'], team: ['arrow-forward-up', 'accent', 'To the team'], reply: ['mail', 'accent', 'Answered'],
     invoice: ['receipt', 'warning', 'Invoice attached'], decide: ['help-circle', 'warning', 'You decide'],
     later: ['clock', 'warning', 'Tracked'], none: ['minus', 'neutral', 'No action']
   };
@@ -133,6 +134,8 @@
       var body = el('div', { style: 'min-width:0' });
       var title = el('div', { 'class': 'tt', text: r.title || '' });
       if (r.suggested) title.appendChild(el('span', { 'class': 'sug', text: 'Suggested' }));
+      if (live) title.appendChild(el('span', { 'class': 'pill', style: 'background:var(--bg-success);color:var(--text-success)', text: 'Live' }));
+      if (r.type === 'preview') title.appendChild(el('span', { 'class': 'pill', style: 'background:var(--bg-warning);color:var(--text-warning)', text: r.pill || 'Preview, goes live on approval' }));
       body.appendChild(title);
       if (r.details || r.link) {
         var d = el('div', { 'class': 'dt' });
