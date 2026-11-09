@@ -1,4 +1,4 @@
-/* approval-cards renderer v2.3. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
+/* approval-cards renderer v2.4. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
 (function () {
   var CSS = '.ac{font-size:14px;line-height:1.6;color:var(--text-primary)}'
     + '.ac [hidden]{display:none !important}'
@@ -30,7 +30,9 @@
     task: ['subtask', 'orange', 'ClickUp'], subtask: ['subtask', 'orange', 'ClickUp'], update: ['pencil', 'yellow', 'ClickUp'],
     comment: ['message', 'violet', 'ClickUp'], close: ['circle-check', 'aqua', 'ClickUp'], time: ['clock', 'aqua', 'ClickUp'],
     status: ['flag', 'aqua', 'ClickUp'], site: ['world', 'green', 'Work done'], ad: ['speakerphone', 'green', 'Work done'],
-    live: ['world', 'success', 'Work done'], preview: ['eye', 'yellow', 'Work done'], asset: ['photo', 'green', 'Work done'], d1: ['database', 'magenta', 'Records'], invoice: ['receipt', 'yellow', 'Billing'],
+    live: ['world', 'success', 'Work done'], preview: ['eye', 'yellow', 'Work done'], asset: ['photo', 'green', 'Work done'],
+    agreement: ['file-certificate', 'green', 'Work done'], campaign: ['send', 'green', 'Work done'],
+    discard: ['trash', 'red', 'Email'], archive: ['archive', 'blue', 'Email'], d1: ['database', 'magenta', 'Records'], invoice: ['receipt', 'yellow', 'Billing'],
     choice: ['help-circle', 'violet', 'Decide']
   };
   var ASK = {
@@ -69,7 +71,7 @@
   window.renderCard = function (root, cfg) {
     if (!document.getElementById('ac-css')) document.head.appendChild(el('style', { id: 'ac-css', text: CSS }));
     root.className = 'ac'; root.textContent = '';
-    var ticks = [], n = 0;
+    var ticks = [], picks = [], n = 0;
     var outer = el('div', { style: 'background:var(--surface-1);border-radius:12px;padding:12px' });
     var card = el('div', { style: 'background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1.1rem 1.25rem' });
     outer.appendChild(card); root.appendChild(outer);
@@ -103,6 +105,17 @@
         icon('alert-circle', 'font-size:18px;color:var(--text-warning);margin-top:1px'),
         el('div', null, [el('div', { style: 'font-size:13px;font-weight:500;color:var(--text-warning)', text: ch.title || 'Check before approving' }),
           el('div', { style: 'font-size:14px;color:var(--text-primary)', text: ch.text })])]));
+    }
+
+    if (cfg.found) {
+      var fd = Array.isArray(cfg.found) ? { lines: cfg.found } : cfg.found;
+      card.appendChild(el('div', { 'class': 'sec', text: fd.label || 'What I found' }));
+      var fb = el('div');
+      (fd.lines || []).forEach(function (l) {
+        fb.appendChild(el('div', { 'class': 'ask' }, [icon('point', 'color:var(--text-secondary)'), el('div', { 'class': 'grow', text: l })]));
+      });
+      card.appendChild(fb);
+      if (fd.full) { var ft = toggle(fd.fullLabel || 'full findings', fd.full); card.appendChild(ft[1]); card.appendChild(el('div', { style: 'margin-top:6px' }, [ft[0]])); }
     }
 
     var SECICON = { 'Work done': ['tool', 'green'], Email: ['mail', 'blue'], ClickUp: ['subtask', 'orange'], Billing: ['receipt', 'yellow'], Website: ['world', 'green'], Ads: ['speakerphone', 'green'], Records: ['database', 'magenta'], Decide: ['help-circle', 'violet'] };
@@ -144,6 +157,14 @@
         body.appendChild(d);
       }
       if (r.said) body.appendChild(el('div', { 'class': 'said', text: '"' + r.said + '"' }));
+      (r.options || []).forEach(function (o) {
+        var sel = el('select', { 'aria-label': o.label, style: 'width:auto !important;min-width:0 !important;height:28px !important;min-height:0 !important;font-size:13px !important;padding:0 24px 0 8px !important' },
+          o.choices.map(function (c) { return el('option', { value: c, text: c }); }));
+        if (o.value) sel.value = o.value;
+        sel.dataset.n = String(n); sel.dataset.k = o.key || o.label.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        picks.push(sel);
+        body.appendChild(el('div', { style: 'display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap' }, [el('span', { 'class': 'dt', text: o.label }), sel]));
+      });
       if (r.preview) body.appendChild(el('div', { 'class': 'pv', text: r.preview }));
       var links = el('div', { style: 'margin-top:6px' }), boxes = [];
       if (r.rest) { var x = toggle(r.restLabel || 'rest of email', r.rest); links.appendChild(x[0]); boxes.push(x[1]); }
@@ -189,7 +210,10 @@
       var nt = notes.value.trim();
       if (ticks.length && !on.length && !nt) { msg.textContent = 'Tick at least one ' + unit + ' or add a note'; return; }
       var head = on.length ? (cfg.prefix || 'Approve changes') + ' ' + on.join(', ') : 'Redraft' + (cfg.id ? ' ' + cfg.id : '');
-      send(head + (nt ? ' · notes: ' + nt : ''), go);
+      var parts = [head];
+      picks.forEach(function (s) { if (on.indexOf(s.dataset.n) >= 0) parts.push(s.dataset.k + ' ' + s.dataset.n + ' = ' + s.value); });
+      if (nt) parts.push('notes: ' + nt);
+      send(parts.join(' · '), go);
     });
     upd();
   };
