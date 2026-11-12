@@ -1,4 +1,4 @@
-/* approval-cards renderer v2.4. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
+/* approval-cards renderer v2.5. Master copy lives in the approval-cards skill (assets/card.js); the public repo only mirrors it. */
 (function () {
   var CSS = '.ac{font-size:14px;line-height:1.6;color:var(--text-primary)}'
     + '.ac [hidden]{display:none !important}'
@@ -10,6 +10,11 @@
     + '.ac .chip{font-size:12px;padding:2px 10px;border-radius:999px;white-space:nowrap;flex:none}'
     + '.ac .row{display:grid;grid-template-columns:22px 32px minmax(0,1fr);gap:10px;padding:12px 0;border-top:0.5px solid var(--border);align-items:start}'
     + '.ac .row.first{border-top:none}'
+    + '.ac .row.has-open{grid-template-columns:22px 32px minmax(0,1fr) auto}'
+    + '.ac a.open{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding:4px 10px;border:0.5px solid var(--border-strong);border-radius:var(--radius);color:var(--text-primary);white-space:nowrap;text-decoration:none;align-self:start}'
+    + '.ac a.open:hover{background:var(--surface-1);text-decoration:none}'
+    + '.ac a.open i{font-size:15px;color:var(--text-secondary)}'
+    + '@media (max-width:520px){.ac .row.has-open{grid-template-columns:22px 32px minmax(0,1fr)}.ac .row.has-open a.open{grid-column:3;justify-self:start}}'
     + '.ac .panel{border:0.5px solid var(--border-strong);border-radius:10px;padding:2px 14px 4px;margin-top:14px}'
     + '.ac .ph{display:flex;align-items:center;gap:8px;padding:10px 0 8px;border-bottom:0.5px solid var(--border);font-size:14px;font-weight:500}'
     + '.ac .ph .cnt{font-size:12px;font-weight:400;color:var(--text-secondary)}'
@@ -136,7 +141,7 @@
       }
       count += 1; cnt.textContent = count === 1 ? '' : count + ' items';
       var live = r.type === 'live' || r.live;
-      var row = el('div', { 'class': 'row' + (first ? ' first' : '') });
+      var row = el('div', { 'class': 'row' + (first ? ' first' : '') + (r.open && r.open.url ? ' has-open' : '') });
       if (live) row.appendChild(el('span'));
       else {
         n += 1;
@@ -173,6 +178,7 @@
       boxes.forEach(function (b) { body.appendChild(b); });
       if (links.childNodes.length) body.appendChild(links);
       row.appendChild(body);
+      if (r.open && r.open.url) row.appendChild(el('a', { 'class': 'open', href: r.open.url, target: '_blank', rel: 'noopener' }, [icon(r.open.icon || 'external-link'), r.open.text || 'Open']));
       panel.appendChild(row);
     });
 
